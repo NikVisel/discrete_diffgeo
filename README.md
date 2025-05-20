@@ -1,5 +1,8 @@
 # discrete_differential
 
+[![CI](https://github.com/NikVisel/discrete_diffgeo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/NikVisel/discrete_diffgeo/actions/workflows/ci.yml)
+
+
 A Rust crate for discrete differential geometry operators and algorithms on half-edge meshes.
 
 ## Features
