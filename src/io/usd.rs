@@ -52,6 +52,28 @@ impl<EA, FA> LoadMesh<Vector3, EA, FA> for Mesh3D<EA, FA> {
         }
         // Build half-edge mesh from positions and faces
         let mesh = Mesh3D::from_vertices_and_faces(positions, &face_counts, &indices);
+
+        // Load animations
+        let xform = unsafe { UsdGeomXformable_Get(stage, prim) };
+        let time_samples = unsafe { UsdGeomXformable_GetTimeSamples(&xform) };
+        for time in time_samples {
+            let transform = unsafe { UsdGeomXformable_GetLocalTransformation(&xform, time) };
+            // Apply transformation to mesh vertices
+            for v in &mut mesh.vertices {
+                let p = v.attr;
+                let transformed_p = transform.transform_point(p);
+                v.attr = transformed_p;
+            }
+        }
+
+        // Load materials
+        let material_binding = unsafe { UsdShadeMaterialBindingAPI_Get(stage, prim) };
+        let material = unsafe { UsdShadeMaterialBindingAPI_GetBoundMaterial(&material_binding) };
+        let shader = unsafe { UsdShadeMaterial_GetSurfaceShader(&material) };
+        let shader_source = unsafe { UsdShadeShader_GetSource(&shader) };
+        // Apply material to mesh (this is a placeholder, actual implementation may vary)
+        mesh.material = Some(shader_source);
+
         Ok(mesh)
     }
 }
@@ -89,6 +111,21 @@ impl<EA, FA> SaveMesh<Vector3, EA, FA> for Mesh3D<EA, FA> {
         unsafe { UsdAttribute_Set(&counts_attr, &counts_arr) };
         let indices_attr = unsafe { UsdGeomMesh_GetFaceVertexIndicesAttr(usd_mesh) };
         unsafe { UsdAttribute_Set(&indices_attr, &indices_arr) };
+
+        // Save animations
+        let xform = unsafe { UsdGeomXformable_Get(stage, root_path) };
+        for (time, transform) in &mesh.animations {
+            unsafe { UsdGeomXformable_SetLocalTransformation(&xform, *time, transform) };
+        }
+
+        // Save materials
+        if let Some(material) = &mesh.material {
+            let material_binding = unsafe { UsdShadeMaterialBindingAPI_Get(stage, root_path) };
+            let shader = unsafe { UsdShadeShader_Define(stage, root_path) };
+            unsafe { UsdShadeShader_SetSource(&shader, material) };
+            unsafe { UsdShadeMaterialBindingAPI_Bind(&material_binding, &shader) };
+        }
+
         // Save stage
         unsafe { UsdStage_Save(stage) };
         Ok(())
