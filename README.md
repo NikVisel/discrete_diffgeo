@@ -73,3 +73,7 @@ To enable USD I/O, install Pixar USD so that `pkg-config` (on Linux/macOS) or `v
 cargo test --features usd
 ```
 If you need to point to a custom install, set `PKG_CONFIG_PATH` or configure `vcpkg` accordingly. No additional environment variables are required.
+
+## Contributing
+
+We welcome contributions from the community! Please read our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
